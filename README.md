@@ -1,4 +1,3 @@
-````markdown
 # Raster Quality Control (QC) Toolkit
 
 This toolkit provides a professional-grade automated workflow for auditing geospatial raster datasets against a Vector Area of Interest (AOI). It goes beyond basic statistics to perform robust data cleaning and advanced statistical analysis.
