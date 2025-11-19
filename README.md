@@ -103,6 +103,3 @@ We moved beyond basic `Min/Max` checks to include advanced metrics. Here is why 
   * **Why it's useful:** Prevents the map from looking "washed out" or solid-colored due to a single bright outlier pixel, ensuring you can actually see the terrain features.
 
 <!-- end list -->
-
-```
-```
