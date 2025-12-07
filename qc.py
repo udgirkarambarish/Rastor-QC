@@ -7,6 +7,9 @@ from rasterio.mask import mask
 from scipy.stats import skew, kurtosis, gaussian_kde
 from collections import Counter
 
+# ---- added import for logger ----
+from logs import ExperimentLogger
+
 # ================= GLOBAL SETTINGS =================
 # Disable interactive mode and cursor globally
 plt.ioff()
@@ -192,7 +195,74 @@ def raster_qc_statistics(raster_path, vector_path, aoi_name="AOI"):
     print(f"Unique Values:       {stats['unique_values']}")
     print(f"Outliers (P1-P99):   {stats['outlier_count']} ({stats['outlier_percent']:.2f}%)")
 
-    # 5. Visuals
+    # ---- added logging block BEFORE visuals (keeps visuals untouched) ----
+    logger = ExperimentLogger(save_dir="logs")
+
+    metadata = {
+        "experiment_name": "Raster_QC_Statistics",
+        "dataset_id": raster_path,
+        "user": "Ambarish",
+        "script_name": "qc.py",
+        "aoi_used": aoi_name
+    }
+
+    data_sources = {
+        "raster_files": [
+            {
+                "role": "qc_raster",
+                "path": raster_path,
+                "crs": str(crs),
+                "resolution": list(resolution),
+                "nodata": float(nodata_val) if nodata_val is not None else None
+            }
+        ],
+        "vector_files": [
+            {
+                "role": "aoi",
+                "path": vector_path,
+                "crs": str(gpd.read_file(vector_path).crs)
+            }
+        ]
+    }
+
+    parameters = {
+        "model_type": "",
+        "input_features": []
+    }
+
+    metrics = {
+        "qc_min": stats["min"],
+        "qc_max": stats["max"],
+        "qc_mean": stats["mean"],
+        "qc_std": stats["std"],
+        "qc_p1": stats["p1"],
+        "qc_p5": stats["p5"],
+        "qc_p50": stats["p50"],
+        "qc_p95": stats["p95"],
+        "qc_p99": stats["p99"],
+        "qc_skewness": stats["skewness"],
+        "qc_kurtosis": stats["kurtosis"],
+        "qc_mode": stats["mode"],
+        "qc_unique_values": stats["unique_values"],
+        "qc_outlier_count": stats["outlier_count"],
+        "qc_outlier_percent": stats["outlier_percent"],
+        "qc_total_pixels": total_pixels,
+        "qc_nodata_pixels": nodata_pixels,
+        "qc_nodata_percent": nodata_pixels / total_pixels * 100.0
+    }
+
+    log_path = logger.log(
+        run_type="qc",
+        metadata=metadata,
+        parameters=parameters,
+        data_sources=data_sources,
+        metrics=metrics,
+        artifacts=[],  # no saved images in this script
+    )
+
+    print("\nQC experiment log saved as:", log_path)
+
+    # 5. Visuals (original untouched)
     plot_quicklook_raster(clipped_data, stats, aoi_name)
     plot_histogram(valid_data, stats, aoi_name)
     plot_boxplot(valid_data, aoi_name)
@@ -203,7 +273,7 @@ def raster_qc_statistics(raster_path, vector_path, aoi_name="AOI"):
 # ================================================================
 
 if __name__ == "__main__":
-    RASTER_FILE = r"C:\Users\udgir\Documents\GitHub\Rastor-QC\ARUP_PILOT_DATA\Rasters\DEM\DEM_UTM42.tif"
-    VECTOR_FILE = r"C:\Users\udgir\Documents\GitHub\Rastor-QC\ARUP_PILOT_DATA\Area_of_Interest\Arup_AOI.shp"
+    RASTER_FILE = r""
+    VECTOR_FILE = r""
 
     raster_qc_statistics(RASTER_FILE, VECTOR_FILE, "Arup")
